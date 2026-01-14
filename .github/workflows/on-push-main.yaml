@@ -1,55 +1,60 @@
-name: Main Branch
+name: on-push-main
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+    paths:
+      - '.github/workflows/on-push-main.yaml'
+      - '.github/workflows/on-version-tagged.yaml'
+      - '.gitops/**'
+      - 'apis/**'
+      - 'examples/**'
+      - 'functions/**'
+      - 'tests/**'
+      - 'upbound.yaml'
 
-env:
-  EXAMPLES: "minimal standard"
+permissions:
+  packages: write
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: upbound/up-action@v2
-      - name: Build
-        run: make build
-      - name: Render Examples
-        run: make 'render:all'
-      - name: Validate Examples
-        run: make 'validate:all'
+    uses: unbounded-tech/workflows-crossplane/.github/workflows/validate.yaml@v2.13.0
+    with:
+      examples: |
+        [
+          { "example": "examples/toolhives/minimal.yaml" },
+          { "example": "examples/toolhives/standard.yaml" }
+        ]
+      api_path: apis/toolhives
+      error_on_missing_schemas: true
 
   test:
-    runs-on: ubuntu-latest
-    needs: validate
-    steps:
-      - uses: actions/checkout@v4
-      - uses: upbound/up-action@v2
-      - name: Build
-        run: make build
-      - name: Run Tests
-        run: make test
+    uses: unbounded-tech/workflows-crossplane/.github/workflows/test.yaml@v2.13.0
+
+  e2e:
+    uses: unbounded-tech/workflows-crossplane/.github/workflows/e2e.yaml@v2.13.0
 
   version-and-tag:
-    runs-on: ubuntu-latest
-    needs: [validate, test]
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Semantic Version
-        id: version
-        uses: paulhatch/semantic-version@v5.4.0
-        with:
-          version_format: "${major}.${minor}.${patch}"
-          major_pattern: "BREAKING CHANGE:"
-          minor_pattern: "feat:"
-      - name: Create Tag
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git tag -a v${{ steps.version.outputs.version }} -m "Release v${{ steps.version.outputs.version }}"
-          git push origin v${{ steps.version.outputs.version }}
+    name: Version and Tag
+    needs:
+      - validate
+      - test
+      - e2e
+    uses: unbounded-tech/workflow-vnext-tag/.github/workflows/workflow.yaml@v1.20.2
+    secrets:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+    with:
+      useDeployKey: true
+      yqPatches: |
+        patches:
+          - filePath: .gitops/deploy/values.yaml
+            selector: .version
+            valuePrefix: "v"
+          - filePath: .gitops/deploy/Chart.yaml
+            selector: .version
+            valuePrefix: ""

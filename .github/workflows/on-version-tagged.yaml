@@ -1,29 +1,26 @@
-name: Release
-
+name: promote
 on:
   push:
     tags:
-      - 'v*'
+    - v*.*.*
+
+permissions:
+  packages: write
+  contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
+
   publish:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: upbound/up-action@v2
-      - name: Build
-        run: make build
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push Package
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          up xpkg push -f _output/hops-ops-helm-toolhive.xpkg ghcr.io/hops-ops/hops-ops-helm-toolhive:${VERSION}
-          up xpkg push -f _output/hops-ops-helm-toolhive.xpkg ghcr.io/hops-ops/hops-ops-helm-toolhive:latest
+    uses: unbounded-tech/workflows-crossplane/.github/workflows/publish.yaml@v2.13.0
+    secrets: inherit
+    with:
+      tag: ${{ github.ref_name }}
+
+  release:
+    needs: publish
+    uses: unbounded-tech/workflow-simple-release/.github/workflows/workflow.yaml@v2.1.1
+    with:
+      tag: ${{ github.ref_name }}
+      name: ${{ github.ref_name }}
