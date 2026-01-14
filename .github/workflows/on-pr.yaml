@@ -1,0 +1,52 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  EXAMPLES: "minimal standard"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: upbound/up-action@v2
+      - name: Build
+        run: make build
+      - name: Render Examples
+        run: make 'render:all'
+      - name: Validate Examples
+        run: make 'validate:all'
+
+  test:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: upbound/up-action@v2
+      - name: Build
+        run: make build
+      - name: Run Tests
+        run: make test
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: upbound/up-action@v2
+      - name: Build
+        run: make build
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push Package
+        run: up xpkg push -f _output/hops-ops-helm-toolhive.xpkg ghcr.io/hops-ops/hops-ops-helm-toolhive:${{ github.sha }}

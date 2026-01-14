@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "packageRules": [
+    {
+      "matchManagers": ["regex"],
+      "matchPackageNames": ["toolhive-operator"],
+      "groupName": "toolhive"
+    }
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": ["functions/render/.*\\.gotmpl$"],
+      "matchStrings": ["repository:\\s*oci://ghcr\\.io/stacklok/toolhive\\s*version:\\s*(?<currentValue>[\\d.]+)"],
+      "depNameTemplate": "toolhive-operator",
+      "datasourceTemplate": "docker",
+      "registryUrlTemplate": "https://ghcr.io",
+      "packageNameTemplate": "stacklok/toolhive/toolhive-operator"
+    }
+  ]
+}

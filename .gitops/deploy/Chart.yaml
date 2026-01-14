@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hops-ops-helm-toolhive
+description: GitOps deployment chart for ToolHive Helm XRD Configuration
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

@@ -1,0 +1,16 @@
+# Standard ToolHive configuration
+# Customizes namespace and adds labels
+apiVersion: helm.hops.ops.com.ai/v1alpha1
+kind: ToolHive
+metadata:
+  name: toolhive
+  namespace: example-env
+spec:
+  clusterName: production-cluster
+  namespace: mcp-servers
+  labels:
+    team: ai-platform
+    environment: production
+  values:
+    operator:
+      replicas: 2

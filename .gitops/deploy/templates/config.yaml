@@ -1,0 +1,18 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: hops-ops-helm-toolhive
+spec:
+  package: ghcr.io/hops-ops/hops-ops-helm-toolhive:{{ .Values.version }}
+  {{- if .Values.skipDependencyResolution }}
+  skipDependencyResolution: true
+  {{- end }}
+---
+{{- if .Values.skipDependencyResolution }}
+apiVersion: pkg.crossplane.io/v1
+kind: Function
+metadata:
+  name: hops-ops-helm-toolhiverender
+spec:
+  package: ghcr.io/hops-ops/hops-ops-helm-toolhive:{{ .Values.version }}
+{{- end }}

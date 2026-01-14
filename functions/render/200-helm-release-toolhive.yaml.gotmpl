@@ -1,0 +1,39 @@
+# code: language=yaml
+#
+# Helm release for ToolHive
+#
+# ToolHive is a Kubernetes operator for deploying MCP (Model Context Protocol)
+# servers, making it easy to run AI tool servers in your cluster.
+#
+
+{{- $th := $state.toolhive }}
+
+---
+apiVersion: helm.m.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: {{ $th.releaseName }}
+  annotations:
+    {{ setResourceNameAnnotation "helm-release-toolhive" }}
+  labels: {{ $th.labels | toJson }}
+spec:
+  managementPolicies: {{ $th.managementPolicies | toJson }}
+  forProvider:
+    chart:
+      name: toolhive-operator
+      repository: oci://ghcr.io/stacklok/toolhive
+      version: 0.5.6
+    namespace: {{ $th.namespace }}
+    {{- if $th.overrideAllValues }}
+    values:
+      {{- toYaml $th.overrideAllValues | nindent 6 }}
+    {{- else }}
+    {{- if $th.values }}
+    values:
+      {{- toYaml $th.values | nindent 6 }}
+    {{- end }}
+    {{- end }}
+  rollbackLimit: 3
+  providerConfigRef:
+    name: {{ $th.providerConfigRef.name }}
+    kind: {{ $th.providerConfigRef.kind }}
