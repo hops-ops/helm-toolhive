@@ -134,7 +134,6 @@ _items = [
                     spec.forProvider.chart = {
                         name = "toolhive-operator"
                         repository = "oci://ghcr.io/stacklok/toolhive"
-                        version = "0.5.24"
                     }
                 }
             ]
