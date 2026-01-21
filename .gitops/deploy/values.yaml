@@ -1,6 +1,5 @@
 # Configuration version to deploy
-version: latest
-
+version: v0.2.0
 # Set to true to skip automatic dependency resolution
 # When true, functions must be installed separately
 skipDependencyResolution: false
